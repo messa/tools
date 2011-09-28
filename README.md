@@ -4,7 +4,7 @@ There are some utilities I use.
 
 Show Subversion repository history log with diffs for each commit.
 
-Output is similar to `git log -p --color`. Uses colordiff for coloring
+Output is similar to `git log -p --color`. Uses `colordiff` for coloring
 `svn diff` output; if colordiff is not found, output is not colored.
 
 
