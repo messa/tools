@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Show Subversion repository history log with diffs for each commit.
+
+Output is similar to 'git log -p --color'. Uses colordiff for coloring
+'svn diff' output; if colordiff is not found, output is not colored.
+"""
+
+__author__ = "Petr Messner"
+
+
 from cStringIO import StringIO
 import re
 import subprocess
@@ -24,7 +34,8 @@ def parse_svn_log_output(stream):
     if not line:
         return
     if line.rstrip() != separationLine:
-        raise Exception("Parse error - separation line expected instead of %r" % line)
+        raise Exception(
+            "Parse error - separation line expected instead of %r" % line)
 
     while True:
         headerLine = stream.readline()
@@ -120,7 +131,7 @@ def main(out=sys.stdout, err=sys.stderr, commands=Commands()):
         if svnLogErrorOutput:
             err.write(svnLogErrorOutput)
         else:
-            err.write("error: svn log command exited with non-zero return code")
+            err.write("error: svn log command exited with non-zero exit code")
         sys.exit(1)
 
 

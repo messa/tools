@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Trim excessive whitespace from line ends in text files.
+"""
+
+__author__ = "Petr Messner"
+
+
 import os
 import re
 import stat
@@ -26,6 +33,9 @@ MAX_TRIM_FILE_SIZE = 512000
 
 
 class StatResult (object):
+    """
+    Result from FS stat method.
+    """
 
     def __init__(self, size, isDir=False, isFile=False):
         self.isDir = isDir
@@ -34,6 +44,9 @@ class StatResult (object):
 
 
 class FS (object):
+    """
+    Filesystem abstraction; can be replaced with mock object in tests.
+    """
 
     def listdir(self, path):
         return os.listdir(path)

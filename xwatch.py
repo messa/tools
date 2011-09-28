@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Run one command repeatedly, separate outputs with blank lines.
+
+This is an alternative to the 'watch' command, but the fullscreen-like
+behavior is done with blank lines, so the output can be easily scrolled.
+"""
+
+__author__ = "Petr Messner"
+
 
 import os
 import sys
 import optparse
 import subprocess
 import time
-
 
 
 class Stopwatch (object):
@@ -56,7 +64,8 @@ def getTime():
 
 class XWatch (object):
 
-    def __init__(self, terminal=Terminal(), stopwatch=Stopwatch(), stdout=sys.stdout, getTime=getTime):
+    def __init__(self, terminal=Terminal(), stopwatch=Stopwatch(),
+                 stdout=sys.stdout, getTime=getTime):
         self.terminal = terminal
         self.stdout = stdout
         self.stopwatch = stopwatch
@@ -105,7 +114,8 @@ class XWatch (object):
 
     def write_footer(self, duration):
         self.terminal.gray()
-        self.stdout.write("%s  %s  %.3f s" % (self.command, self.getTime(), duration))
+        self.stdout.write(
+            "%s  %s  %.3f s" % (self.command, self.getTime(), duration))
         self.stdout.flush()
         self.terminal.reset_colors()
         self.stdout.write("\n")
