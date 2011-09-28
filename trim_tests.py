@@ -17,12 +17,25 @@ class Mock (object):
 
     def __getattr__(self, name):
         def f(*args, **kwargs):
-            (expectedName, expectedArgs, expectedKwArgs, response) = self._operations[0]
+            if not self._operations:
+                raise Exception(
+                    "called unexpected command %r %r %r" %
+                    (name, args, kwargs))
+
+            (expectedName, expectedArgs, expectedKwArgs, response) = \
+                self._operations[0]
+
             expectedArgs = tuple(expectedArgs)
 
-            assert name == expectedName and args == expectedArgs and kwargs == expectedKwArgs, \
-                "Expected call %r %r %r, called %r %r %r" % \
-                (expectedName, expectedArgs, expectedKwArgs, name, args, kwargs)
+            assert (
+                name == expectedName and
+                args == expectedArgs and
+                kwargs == expectedKwArgs
+            ), (
+                "Expected call %r %r %r, called %r %r %r" % (
+                    expectedName, expectedArgs, expectedKwArgs,
+                    name, args, kwargs)
+            )
 
             self._operations.popleft()
             return response
@@ -79,6 +92,27 @@ class TrimTests (unittest.TestCase):
     def test_ignore_dotfiles(self):
         fs = Mock([
             ("listdir", ["."], {}, [".hello.txt"]),
+        ])
+        outputStream = StringIO()
+        trim.main(fs=fs, stdout=outputStream)
+        output = outputStream.getvalue()
+        self.assertTrue(fs.everything_called())
+        self.assertEqual(output, "")
+
+    def test_ignore_known_binary_files(self):
+        fs = Mock([
+            ("listdir", ["."], {}, ["image.png", "somescript.pyc"]),
+        ])
+        outputStream = StringIO()
+        trim.main(fs=fs, stdout=outputStream)
+        output = outputStream.getvalue()
+        self.assertTrue(fs.everything_called())
+        self.assertEqual(output, "")
+
+    def test_ignore_too_big_files(self):
+        fs = Mock([
+            ("listdir", ["."], {}, ["somebigfile"]),
+            ("stat", ["./somebigfile"], {}, trim.StatResult(size=1001001, isFile=True)),
         ])
         outputStream = StringIO()
         trim.main(fs=fs, stdout=outputStream)

@@ -8,6 +8,23 @@ import sys
 from os.path import join as path_join
 
 
+SKIPPED_EXTENSIONS = (
+    ".class",
+    ".gif",
+    ".gz",
+    ".jar",
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".psd",
+    ".pyc",
+    ".tar",
+    ".zip",
+)
+
+MAX_TRIM_FILE_SIZE = 512000
+
+
 class StatResult (object):
 
     def __init__(self, size, isDir=False, isFile=False):
@@ -40,10 +57,9 @@ class FS (object):
         f.close()
 
 
-
 def trim_line(line):
     """
-    Remove ending whitespace form line.
+    Remove ending whitespace from line.
     """
     n = len(line)
     lineEnding = ""
@@ -58,7 +74,6 @@ def trim_line(line):
     return line[:n] + lineEnding
 
 
-
 class Trim (object):
 
     def __init__(self, fs, stdout):
@@ -68,14 +83,18 @@ class Trim (object):
     def process_dir(self, path):
         names = self.fs.listdir(path)
         for name in sorted(names):
-            if name.startswith("."):
+            if name.startswith(".") or name.endswith("~"):
                 continue
+            if any(name.endswith(ext) for ext in SKIPPED_EXTENSIONS):
+                continue
+
             p = path_join(path, name)
             st = self.fs.stat(p)
             if st.isDir:
                 self.process_dir(p)
             elif st.isFile:
-                self.process_file(p)
+                if st.size < MAX_TRIM_FILE_SIZE:
+                    self.process_file(p)
 
     def process_file(self, path):
         data = self.fs.get_contents(path)
@@ -86,11 +105,9 @@ class Trim (object):
             self.fs.write(path, trimmedData)
 
 
-
 def main(fs=FS(), stdout=sys.stdout):
     t = Trim(fs=fs, stdout=stdout)
     t.process_dir(".")
-
 
 
 if __name__ == "__main__":
