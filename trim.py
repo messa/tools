@@ -28,6 +28,12 @@ SKIPPED_EXTENSIONS = (
     ".pyc",
     ".tar",
     ".zip",
+    ".sqlite",
+    ".ttf",
+    ".exe",
+    ".so",
+    ".pyo",
+    ".pyd",
 )
 
 MAX_TRIM_FILE_SIZE = 512000
@@ -99,13 +105,13 @@ class Trim (object):
         self.stdout = stdout
         self.dryRun = bool(dryRun)
 
-    def process(self, path, skipLargeSize=False):
+    def process(self, path, force=False):
         st = self.fs.stat(path)
         if st.isDir:
             self.process_dir(path)
         elif st.isFile:
-            if st.size < MAX_TRIM_FILE_SIZE or not skipLargeSize:
-                self.process_file(path)
+            if st.size < MAX_TRIM_FILE_SIZE or force:
+                self.process_file(path, force=force)
 
 
     def process_dir(self, path):
@@ -117,16 +123,22 @@ class Trim (object):
                 continue
 
             p = path_join(path, name)
-            self.process(p, skipLargeSize=True)
+            self.process(p)
 
 
-    def process_file(self, path):
+    def process_file(self, path, force):
         data = self.fs.get_contents(path)
+        if not force and chr(0) in data:
+            # skip binary files
+            return
         trimmedData = "".join(trim_line(line) for line in data.splitlines(True))
         if trimmedData != data:
-            self.stdout.write(path + "\n")
-            if not self.dryRun:
-                self.fs.write(path, trimmedData)
+            try:
+                if not self.dryRun:
+                    self.fs.write(path, trimmedData)
+                self.stdout.write(path + "\n")
+            except Exception, e:
+                self.stdout.write("%s: %r\n" % (path, e))
 
 
 def main(fs=FS(), stdout=sys.stdout):
@@ -140,7 +152,7 @@ def main(fs=FS(), stdout=sys.stdout):
     t = Trim(fs=fs, stdout=stdout, dryRun=options.dryRun)
     if args:
         for arg in args:
-            t.process(arg)
+            t.process(arg, force=True)
     else:
         t.process(".")
 
