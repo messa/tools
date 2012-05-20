@@ -8,6 +8,7 @@ Trim excessive whitespace from line ends in text files.
 __author__ = "Petr Messner"
 
 
+import optparse
 import os
 import re
 import stat
@@ -37,10 +38,14 @@ class StatResult (object):
     Result from FS stat method.
     """
 
-    def __init__(self, size, isDir=False, isFile=False):
+    def __init__(self, size=None, isDir=False, isFile=False):
         self.isDir = isDir
         self.isFile =isFile
         self.size = size
+
+    def __str__(self):
+        return "<%s isDir=%r isFile=%r size=%r>" % (
+            self.__class__.__name__, self.isDir, self.isFile, self.size)
 
 
 class FS (object):
@@ -89,9 +94,19 @@ def trim_line(line):
 
 class Trim (object):
 
-    def __init__(self, fs, stdout):
+    def __init__(self, fs, stdout, dryRun=False):
         self.fs = fs
         self.stdout = stdout
+        self.dryRun = bool(dryRun)
+
+    def process(self, path, skipLargeSize=False):
+        st = self.fs.stat(path)
+        if st.isDir:
+            self.process_dir(path)
+        elif st.isFile:
+            if st.size < MAX_TRIM_FILE_SIZE or not skipLargeSize:
+                self.process_file(path)
+
 
     def process_dir(self, path):
         names = self.fs.listdir(path)
@@ -102,25 +117,28 @@ class Trim (object):
                 continue
 
             p = path_join(path, name)
-            st = self.fs.stat(p)
-            if st.isDir:
-                self.process_dir(p)
-            elif st.isFile:
-                if st.size < MAX_TRIM_FILE_SIZE:
-                    self.process_file(p)
+            self.process(p, skipLargeSize=True)
+
 
     def process_file(self, path):
         data = self.fs.get_contents(path)
         trimmedData = "".join(trim_line(line) for line in data.splitlines(True))
         if trimmedData != data:
             self.stdout.write(path + "\n")
-            self.fs.write(path+"~", data)
             self.fs.write(path, trimmedData)
 
 
 def main(fs=FS(), stdout=sys.stdout):
-    t = Trim(fs=fs, stdout=stdout)
-    t.process_dir(".")
+    op = optparse.OptionParser()
+    op.add_option("--dry-run", "-n", dest="dryRun", default=False, action="store_true")
+    (options, args) = op.parse_args()
+
+    t = Trim(fs=fs, stdout=stdout, dryRun=options.dryRun)
+    if args:
+        for arg in args:
+            t.process(arg)
+    else:
+        t.process(".")
 
 
 if __name__ == "__main__":

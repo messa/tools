@@ -5,12 +5,17 @@ from cStringIO import StringIO
 import unittest
 
 import trim
+from trim import Trim
 
 
 class Mock (object):
 
     def __init__(self, operations):
         self._operations = deque(operations)
+
+    def __str__(self):
+        rem = ", ".join("%s(*%s, **%s)=%s" % op for op in self._operations)
+        return "<%s remaining operations: %s>" % (self.__class__.__name__, rem)
 
     def everything_called(self):
         return len(self._operations) == 0
@@ -77,45 +82,53 @@ class TrimTests (unittest.TestCase):
 
     def test_trim_file(self):
         fs = Mock([
+            ("stat", ["."], {}, trim.StatResult(isDir=True)),
             ("listdir", ["."], {}, ["hello.txt"]),
             ("stat", ["./hello.txt"], {}, trim.StatResult(size=7, isFile=True)),
             ("get_contents", ["./hello.txt"], {}, "Hello \n"),
-            ("write", ["./hello.txt~", "Hello \n"], {}, None),
+            #("write", ["./hello.txt~", "Hello \n"], {}, None),
             ("write", ["./hello.txt", "Hello\n"], {}, None),
         ])
         outputStream = StringIO()
-        trim.main(fs=fs, stdout=outputStream)
+        t = Trim(fs=fs, stdout=outputStream)
+        t.process(".")
         output = outputStream.getvalue()
-        self.assertTrue(fs.everything_called())
+        self.assertTrue(fs.everything_called(), fs)
         self.assertEqual(output, "./hello.txt\n")
 
     def test_ignore_dotfiles(self):
         fs = Mock([
+            ("stat", ["."], {}, trim.StatResult(isDir=True)),
             ("listdir", ["."], {}, [".hello.txt"]),
         ])
         outputStream = StringIO()
-        trim.main(fs=fs, stdout=outputStream)
+        t = Trim(fs=fs, stdout=outputStream)
+        t.process(".")
         output = outputStream.getvalue()
         self.assertTrue(fs.everything_called())
         self.assertEqual(output, "")
 
     def test_ignore_known_binary_files(self):
         fs = Mock([
+            ("stat", ["."], {}, trim.StatResult(isDir=True)),
             ("listdir", ["."], {}, ["image.png", "somescript.pyc"]),
         ])
         outputStream = StringIO()
-        trim.main(fs=fs, stdout=outputStream)
+        t = Trim(fs=fs, stdout=outputStream)
+        t.process(".")
         output = outputStream.getvalue()
         self.assertTrue(fs.everything_called())
         self.assertEqual(output, "")
 
     def test_ignore_too_big_files(self):
         fs = Mock([
+            ("stat", ["."], {}, trim.StatResult(isDir=True)),
             ("listdir", ["."], {}, ["somebigfile"]),
             ("stat", ["./somebigfile"], {}, trim.StatResult(size=1001001, isFile=True)),
         ])
         outputStream = StringIO()
-        trim.main(fs=fs, stdout=outputStream)
+        t = Trim(fs=fs, stdout=outputStream)
+        t.process(".")
         output = outputStream.getvalue()
         self.assertTrue(fs.everything_called())
         self.assertEqual(output, "")
