@@ -133,6 +133,20 @@ class TrimTests (unittest.TestCase):
         self.assertTrue(fs.everything_called())
         self.assertEqual(output, "")
 
+    def test_trim_file_dry_run(self):
+        fs = Mock([
+            ("stat", ["."], {}, trim.StatResult(isDir=True)),
+            ("listdir", ["."], {}, ["hello.txt"]),
+            ("stat", ["./hello.txt"], {}, trim.StatResult(size=7, isFile=True)),
+            ("get_contents", ["./hello.txt"], {}, "Hello \n"),
+        ])
+        outputStream = StringIO()
+        t = Trim(fs=fs, stdout=outputStream, dryRun=True)
+        t.process(".")
+        output = outputStream.getvalue()
+        self.assertTrue(fs.everything_called(), fs)
+        self.assertEqual(output, "./hello.txt\n")
+
 
 
 if __name__ == "__main__":

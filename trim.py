@@ -125,12 +125,16 @@ class Trim (object):
         trimmedData = "".join(trim_line(line) for line in data.splitlines(True))
         if trimmedData != data:
             self.stdout.write(path + "\n")
-            self.fs.write(path, trimmedData)
+            if not self.dryRun:
+                self.fs.write(path, trimmedData)
 
 
 def main(fs=FS(), stdout=sys.stdout):
     op = optparse.OptionParser()
-    op.add_option("--dry-run", "-n", dest="dryRun", default=False, action="store_true")
+    op.add_option(
+        "--dry-run", "-n",
+        dest="dryRun", default=False,
+        action="store_true")
     (options, args) = op.parse_args()
 
     t = Trim(fs=fs, stdout=stdout, dryRun=options.dryRun)
