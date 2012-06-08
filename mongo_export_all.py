@@ -37,6 +37,7 @@ def export_collection(collection):
         lines = pformat(doc).splitlines()
         for line in lines:
             print INDENT + INDENT + line
+        print
     print
 
 
