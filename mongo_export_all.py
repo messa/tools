@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import optparse
+import os
 from pprint import pformat
 import pymongo
 
@@ -13,6 +14,8 @@ def main():
     op = optparse.OptionParser()
     op.add_option("--host", default="localhost")
     op.add_option("--port", default="27017")
+    op.add_option("--user", default=None)
+    op.add_option("--password", default=None)
     (options, args) = op.parse_args()
 
     conn = pymongo.Connection(host=options.host, port=int(options.port))
@@ -20,6 +23,16 @@ def main():
     print
     for dbName in conn.database_names():
         db = conn[dbName]
+        if options.user:
+            if options.password:
+                password = options.password
+            elif os.getenv("PASSWORD"):
+                password = os.getenv("PASSWORD")
+            else:
+                raise Exception(
+                    "If --user is specified, password must be given after "
+                    "--password or in PASSWORD env variable.")
+            db.authenticate(options.user, password)
         export_database(db)
 
 
