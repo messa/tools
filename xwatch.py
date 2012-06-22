@@ -124,9 +124,11 @@ class XWatch (object):
 
 def main():
     op = optparse.OptionParser()
+    op.add_option("--interval", "-i", type=float, default=1)
     (options, args) = op.parse_args()
 
     w = XWatch()
+    w.interval = float(options.interval)
 
     if not args:
         sys.stderr.write("No arguments provided; nothing to run.\n")
