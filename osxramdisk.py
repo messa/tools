@@ -46,7 +46,7 @@ def main():
     if sys.platform != "darwin":
         print "Warning: this script is designed for darwin (Mac OS X); your " \
             "platform is %s" % sys.platform
-    
+
     op = optparse.OptionParser()
     op.add_option("--mountpoint", default="/Volumes/ramdisk")
     op.add_option("--size", default="200M")

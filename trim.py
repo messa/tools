@@ -131,7 +131,8 @@ class Trim (object):
         if not force and chr(0) in data:
             # skip binary files
             return
-        trimmedData = "".join(trim_line(line) for line in data.splitlines(True))
+        lines = data.splitlines(True)
+        trimmedData = "".join(trim_line(line) for line in lines)
         if trimmedData != data:
             try:
                 if not self.dryRun:
@@ -139,6 +140,11 @@ class Trim (object):
                 self.stdout.write(path + "\n")
             except Exception, e:
                 self.stdout.write("%s: %r\n" % (path, e))
+
+        tab_indents = any(re.match(r"^ *\t", line) for line in lines)
+        space_indents = any(re.match("^\t* {4}", line) for line in lines)
+        if tab_indents and space_indents:
+            self.stdout.write("%s: mixed space and tab indentation\n" % path)
 
 
 def main(fs=FS(), stdout=sys.stdout):
