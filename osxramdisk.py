@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import optparse
+import os
 import re
 import subprocess
 import sys
@@ -55,6 +56,7 @@ def main():
     size = parse_size(options.size)
     if already_mounted(options.mountpoint):
         raise Exception("Some filesystem is already mounted at %s" % options.mountpoint)
+    create_directory(options.mountpoint)
     device_name = create_ramdisk_device(size)
     create_filesystem(device_name)
     mount(device_name, options.mountpoint)
@@ -67,6 +69,12 @@ def main():
     if tmpdir:
         print ""
         print "(Current TMPDIR is %s)" % tmpdir
+
+
+def create_directory(path):
+    if not os.path.isdir(path):
+        print "Creting directory %s" % path
+        os.mkdir(path)
 
 
 def already_mounted(mountpoint):
@@ -89,7 +97,8 @@ def create_ramdisk_device(size):
     sectors = size / 512
     output = subprocess.check_output(
         ["hdiutil", "attach", "-nomount", "ram://%d" % sectors])
-    if not re.match(r"^/dev/disk[0-9]+$", output.strip()):
+    output = output.strip()
+    if not re.match(r"^/dev/disk[0-9]+$", output):
         raise Exception("Invalid hdiutil output: %r", output)
     print "Created device %s" % output
     return output
