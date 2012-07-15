@@ -1,10 +1,17 @@
 There are some utilities I use.
 
+# Overview
+
 
 ## instant_apache
 
 Create configuration and run Apache webserver with document root in current
 or given directory.
+
+
+## mongo\_export\_all
+
+Pretty-print all contents in a MongoDB. For development/debug purposes.
 
 
 ## svnlog
@@ -24,9 +31,23 @@ Trim excessive whitespace from line ends in text files.
 
 Run one command repeatedly, separate outputs with blank lines.
 
-This is an alternative to the `xwatch` command, but the fullscreen-like
+This is an alternative to the `watch` command, but the fullscreen-like
 behavior is done with blank lines, so the output can be easily scrolled.
 
 
-## tests
+# Installation
+
+There is no `setup.py`. I personally checkout this repository in `~/code/tools`.
+You have more options how to run these tools easily from command line:
+
+  - Add the directory to `$PATH`
+  - Symlink some or all files to `/usr/local/bin`
+  - Use [alias](http://www.gnu.org/software/bash/manual/html_node/Aliases.html)
+    or shell function
+
+
+# Tests
+
+Some utilities are unit-tested using [nose](http://nose.readthedocs.org/en/latest/).
+Tests are located in files with names ending with `_tests.py`.
 
