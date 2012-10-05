@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+# TODO bugy: tmp vedle, "pre" prvni radek mimo
+
 import codecs
 from contextlib import contextmanager
 import logging
@@ -8,6 +10,7 @@ import markdown
 import optparse
 import os
 from os.path import abspath, dirname, isdir, isfile
+from os.path import join as path_join
 from shutil import rmtree
 import tempfile
 import time
@@ -221,7 +224,7 @@ class LivePreview (object):
 
 
     def generate(self, path):
-        output_path = self.target_dir + path + ".html"
+        output_path = path_join(self.target_dir, path + ".html")
 
         if not isdir(dirname(output_path)):
             logger.debug("Creating directory %s", dirname(output_path))
