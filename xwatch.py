@@ -77,7 +77,11 @@ class XWatch (object):
     def run_loop(self):
         while True:
             self.run_one()
-            time.sleep(self.interval)
+            try:
+                time.sleep(self.interval)
+            except KeyboardInterrupt, e:
+                print
+                break
 
 
     def run_command(self):
