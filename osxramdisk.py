@@ -1,6 +1,19 @@
 #!/usr/bin/env python2.7
 # -*- coding: UTF-8 -*-
 
+"""
+You can add this fragment to your ~/.bash_profile to setup TMPDIR env.
+variable automatically:
+
+ramdisk=/Volumes/ramdisk
+if [ -d $ramdisk ]; then
+    if mount | awk '{print $3}' | grep $ramdisk >/dev/null 2>&1; then
+        TMPDIR=$eamdisk
+        export TMPDIR
+    fi
+fi
+"""
+
 import optparse
 import os
 import re
