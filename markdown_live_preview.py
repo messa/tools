@@ -102,9 +102,9 @@ html_start = u"""
             }
             h4,h5,h6{ font-weight: bold; }
             h1{ font-size:2.5em; }
-            h2{ font-size:2em; border-bottom:1px solid silver; padding-bottom: 5px; }
-            h3{ font-size:1.5em; }
-            h4{ font-size:1.2em; }
+            h2{ font-size:2.0em; border-bottom:1px solid silver; padding-bottom: 5px; }
+            h3{ font-size:1.7em; }
+            h4{ font-size:1.1em; }
             h5{ font-size:1em; }
             h6{ font-size:0.9em; }
 
