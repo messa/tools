@@ -63,7 +63,7 @@ def main():
 
     op = optparse.OptionParser()
     op.add_option("--mountpoint", default="/Volumes/ramdisk")
-    op.add_option("--size", default="200M")
+    op.add_option("--size", default="400M")
     (options, args) = op.parse_args()
 
     size = parse_size(options.size)
