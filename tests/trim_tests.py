@@ -1,8 +1,13 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from collections import deque
 from cStringIO import StringIO
 import unittest
+from os.path import abspath, dirname
+import sys
+
+sys.path.insert(0, dirname(dirname(abspath(__file__))))
 
 import trim
 from trim import Trim
