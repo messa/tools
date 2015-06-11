@@ -14,14 +14,6 @@ or given directory.
 Pretty-print all contents in a MongoDB. For development/debug purposes.
 
 
-## svnlog
-
-Show Subversion repository history log with diffs for each commit.
-
-Output is similar to `git log -p --color`. Uses `colordiff` for coloring
-`svn diff` output; if colordiff is not found, output is not colored.
-
-
 ## trim
 
 Trim excessive whitespace from line ends in text files.
