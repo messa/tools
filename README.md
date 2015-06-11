@@ -9,6 +9,12 @@ Create configuration and run Apache webserver with document root in current
 or given directory.
 
 
+## mongo_overview
+
+Gives overview what databases and collections are contained in your MongoDB.
+With argument `-s` it also analyzes and prints document structure.
+
+
 ## mongo\_export\_all
 
 Pretty-print all contents in a MongoDB. For development/debug purposes.
@@ -36,10 +42,4 @@ You have more options how to run these tools easily from command line:
   - Symlink some or all files to `/usr/local/bin`
   - Use [alias](http://www.gnu.org/software/bash/manual/html_node/Aliases.html)
     or shell function
-
-
-# Tests
-
-Some utilities are unit-tested using [nose](http://nose.readthedocs.org/en/latest/).
-Tests are located in files with names ending with `_tests.py`.
 
