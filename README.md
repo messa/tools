@@ -15,11 +15,6 @@ Gives overview what databases and collections are contained in your MongoDB.
 With argument `-s` it also analyzes and prints document structure.
 
 
-## mongo\_export\_all
-
-Pretty-print all contents in a MongoDB. For development/debug purposes.
-
-
 ## trim
 
 Trim excessive whitespace from line ends in text files.
