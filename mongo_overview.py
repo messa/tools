@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
+from blessings import Terminal
 from datetime import datetime
-import logging
-import pymongo
 from collections import defaultdict
 from contextlib import contextmanager
-from blessings import Terminal
+import pymongo
 from time import time
 from uuid import UUID
 import random
@@ -22,7 +21,6 @@ def main():
     p.add_argument('mongo_uri', nargs='?', default='mongodb://127.0.0.1:27017/')
     p.add_argument('--structure', '-s', action='store_true', help='analyze document structure')
     args = p.parse_args()
-    logging.basicConfig(level=logging.DEBUG)
     pr = Printer(t=t)
     client = pymongo.MongoClient(args.mongo_uri,
         read_preference=secondary_preferred,
@@ -91,6 +89,9 @@ class DocStructureAnalyzer:
 
 
 class _DSANode:
+    '''
+    Helper class for DocStructureAnalyzer
+    '''
 
     def __init__(self):
         self.items = defaultdict(lambda: defaultdict(dict))
