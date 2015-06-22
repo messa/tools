@@ -26,7 +26,11 @@ def main():
     p = mongodb_process(
         data_dir=args.datadir, port=int(args.port),
         auth=args.auth, wiredtiger=args.wiredTiger)
-    p.wait()
+    try:
+        p.wait()
+    except KeyboardInterrupt:
+        p.terminate()
+        p.wait()
 
 
 def mongodb_process(data_dir, port, auth, wiredtiger):
