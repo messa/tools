@@ -10,7 +10,7 @@ import pymongo
 
 secondary_preferred = pymongo.ReadPreference.SECONDARY_PREFERRED
 
-t = Terminal()
+t = Terminal(force_styling=True)
 
 
 def main():

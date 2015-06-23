@@ -5,9 +5,24 @@ Run commands in parallel.
 
 Example:
 
-    $ pararun.py [foo] echo foo :: [bar] echo bar
+    $ ./pararun.py echo foo
+    [echo] foo
+
+Commands are separated by `::`:
+
+    $ ./pararun.py echo foo :: echo bar
+    [echo] foo
+    [echo] bar
+
+Commands can be labelled by adding "[name]" before a command:
+
+    $ ./pararun.py [foo] echo foo :: [bar] echo bar
     [foo] foo
     [bar] bar
+
+More real-world example:
+
+    $ ./pararun.py instant_mongodb.py :: gulp watch :: ./web_app.py
 '''
 
 import argparse
@@ -18,13 +33,12 @@ import threading
 from time import sleep
 
 
-t = Terminal()
-
-
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument('--color', '-c', action='store_true', help='force color output')
     p.add_argument('command', nargs=argparse.REMAINDER)
     args = p.parse_args()
+    term = Terminal(force_styling=args.color)
     # args.command is something like ['echo', 'a', '::', 'echo', 'b']
     cmds = [[]]
     for x in args.command:
@@ -33,7 +47,7 @@ def main():
         else:
             cmds[-1].append(x)
     # cmds is now something like [['echo', 'a'], ['echo', 'b']]
-    pr = ParaRun()
+    pr = ParaRun(term)
     for cmd in cmds:
         if cmd[0].startswith('[') and cmd[0].endswith(']'):
             cmd, name = cmd[1:], cmd[0][1:-1]
@@ -51,71 +65,75 @@ def main():
 
 class ParaRun:
 
-    def __init__(self):
+    def __init__(self, term):
+        self.term = term
         self.processes = []
+        self.decorations = cycle([
+            self.term.green,
+            self.term.blue,
+            self.term.yellow,
+            self.term.red,
+        ])
 
     def start(self, cmd, name=None):
         assert isinstance(cmd, list)
         name = name or cmd[0]
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+        process = subprocess.Popen(cmd,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            universal_newlines=True)
         decoration = self.get_decoration()
-        t = threading.Thread(target=self.tail, args=(p, name, decoration))
-        t.start()
-        self.processes.append(_Process(cmd=cmd, name=name, p=p, t=t, decoration=decoration))
-
-    _decorations = cycle([
-        t.green,
-        t.blue,
-        t.yellow,
-        t.red,
-    ])
+        tail_thread = threading.Thread(target=self.tail, args=(process, name, decoration))
+        tail_thread.start()
+        self.processes.append(_ProcessInfo(
+            cmd=cmd, name=name, process=process,
+            tail_thread=tail_thread, decoration=decoration))
 
     def get_decoration(self):
-        return next(self._decorations)
+        return next(self.decorations)
 
-    def tail(self, p, name, decoration):
-        for line in p.stdout:
-            print(decoration(t.bold('[' + name + ']')) + ' ' + decoration(line.rstrip()))
-        p.wait()
+    def tail(self, process, name, decoration):
+        for line in process.stdout:
+            print(decoration(self.term.bold('[' + name + ']')) + ' ' + decoration(line.rstrip()))
+        process.wait()
         print('Process {name} (pid {pid}) exited with return code {rc}'.format(
-            name=decoration(t.bold(name)),
-            pid=p.pid, rc=p.returncode))
+            name=decoration(self.term.bold(name)),
+            pid=process.pid, rc=process.returncode))
 
     def run(self):
-        term = False
-        while any(p.p for p in self.processes):
-            for p in self.processes:
-                if p.p and p.p.poll() is not None:
-                    p.p = None
-                    if not term and any(p.p for p in self.processes):
+        stop = False
+        while any(pi.process for pi in self.processes):
+            for pi in self.processes:
+                if pi.process and pi.process.poll() is not None:
+                    pi.process = None
+                    if not stop and any(pi2.process for pi2 in self.processes):
                         print('Terminating other processes')
                         self.terminate()
-                        term = True
-            sleep(.1)
+                        stop = True
+            sleep(0.1)
 
     def terminate(self):
-        for p in self.processes:
-            if p.p:
+        for pi in self.processes:
+            if pi.process:
                 try:
-                    p.p.terminate()
+                    pi.process.terminate()
                 except ProcessLookupError:
-                    p.p = None
+                    pi.process = None
 
     def close(self):
         self.terminate()
-        for p in self.processes:
-            if p.t:
-                p.t.join()
-                p.t = None
+        for pi in self.processes:
+            if pi.tail_thread:
+                pi.tail_thread.join()
+                pi.tail_thread = None
 
 
-class _Process:
+class _ProcessInfo:
 
-    def __init__(self, cmd, name, p, t, decoration):
+    def __init__(self, cmd, name, process, tail_thread, decoration):
         self.cmd = cmd
         self.name = name
-        self.p = p
-        self.t = t
+        self.process = process
+        self.tail_thread = tail_thread
         self.decoration = decoration
 
 
