@@ -72,6 +72,8 @@ class ParaRun:
             self.term.green,
             self.term.blue,
             self.term.yellow,
+            self.term.magenta,
+            self.term.cyan,
             self.term.red,
         ])
 
