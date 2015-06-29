@@ -11,6 +11,8 @@ from uuid import UUID
 import random
 
 
+assert pymongo.version.startswith('3.'), pymongo.version
+
 secondary_preferred = pymongo.ReadPreference.SECONDARY_PREFERRED
 
 t = Terminal()
