@@ -29,6 +29,7 @@ import argparse
 from blessings import Terminal
 from itertools import cycle
 import subprocess
+import sys
 import threading
 from time import sleep
 
@@ -47,20 +48,28 @@ def main():
         else:
             cmds[-1].append(x)
     # cmds is now something like [['echo', 'a'], ['echo', 'b']]
-    pr = ParaRun(term)
-    for cmd in cmds:
-        if cmd[0].startswith('[') and cmd[0].endswith(']'):
-            cmd, name = cmd[1:], cmd[0][1:-1]
-        else:
-            name = None
-        pr.start(cmd, name=name)
     try:
+        pr = ParaRun(term)
+        for cmd in cmds:
+            if cmd[0].startswith('[') and cmd[0].endswith(']'):
+                name, cmd = cmd[0], cmd[1:]
+                name = name[1:-1] # strip '[' and ']'
+            else:
+                name = None
+            pr.start(cmd, name=name)
         try:
-            pr.run()
-        except KeyboardInterrupt:
-            print()
-    finally:
-        pr.close()
+            try:
+                pr.run()
+            except KeyboardInterrupt:
+                print()
+        finally:
+            pr.close()
+    except AppError as e:
+        sys.exit('ERROR: {}'.format(e))
+
+
+class AppError (Exception):
+    pass
 
 
 class ParaRun:
@@ -80,10 +89,17 @@ class ParaRun:
     def start(self, cmd, name=None):
         assert isinstance(cmd, list)
         name = name or cmd[0]
-        process = subprocess.Popen(cmd,
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            universal_newlines=True)
+        try:
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                universal_newlines=True)
+        except Exception as e:
+            raise AppError('Failed to start command {}: {}'.format(cmd, e))
         decoration = self.get_decoration()
+        #print('Process {name} started (pid {pid})'.format(
+        #    name=decoration(self.term.bold(name)), pid=process.pid))
         tail_thread = threading.Thread(target=self.tail, args=(process, name, decoration))
         tail_thread.start()
         self.processes.append(_ProcessInfo(
@@ -94,8 +110,12 @@ class ParaRun:
         return next(self.decorations)
 
     def tail(self, process, name, decoration):
-        for line in process.stdout:
+        while True:
+            line = process.stdout.readline()
+            if not line:
+                break
             print(decoration(self.term.bold('[' + name + ']')) + ' ' + decoration(line.rstrip()))
+            sys.stdout.flush()
         process.wait()
         print('Process {name} (pid {pid}) exited with return code {rc}'.format(
             name=decoration(self.term.bold(name)),
