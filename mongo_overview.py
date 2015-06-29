@@ -6,6 +6,7 @@ from datetime import datetime
 from collections import defaultdict
 from contextlib import contextmanager
 import pymongo
+import sys
 from time import time
 from uuid import UUID
 import random
@@ -29,6 +30,13 @@ def main():
         connectTimeoutMS=5000,
         serverSelectionTimeoutMS=5000)
     print('client: {!r}; server version: {}'.format(client, client.server_info()['version']))
+    try:
+        overview(pr, client, structure=args.structure)
+    except KeyboardInterrupt as e:
+        sys.exit('(KeyboardInterrupt)')
+
+
+def overview(pr, client, structure):
     db_names = sorted(client.database_names())
     for db_name in db_names:
         pr.nl()
@@ -59,7 +67,7 @@ def main():
                         pr('index: {t.bold}{t.black}{name}{t.normal} ({key}) {size:.2f} kB',
                             name=index['name'], key=desc, size=stats['indexSizes'][index['name']]/1024.)
 
-                    if args.structure:
+                    if structure:
                         cursor = c.find()
                         count = cursor.count()
                         sample_indexes = random.sample(range(count), min(count, 100))
