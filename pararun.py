@@ -23,6 +23,11 @@ Commands can be labelled by adding "[name]" before a command:
 More real-world example:
 
     $ ./pararun.py instant_mongodb.py :: gulp watch :: ./web_app.py
+
+Processes are terminated when the first one finishes. To avoid this, use
+parameter --wait:
+
+    $ ./pararun.py --wait large_batch :: small_batch
 '''
 
 import argparse
@@ -37,6 +42,7 @@ from time import sleep
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--color', '-c', action='store_true', help='force color output')
+    p.add_argument('--wait', '-w', action='store_true', help='do not terminate processes, wait for the last one to finish')
     p.add_argument('command', nargs=argparse.REMAINDER)
     args = p.parse_args()
     term = Terminal(force_styling=args.color)
@@ -59,7 +65,10 @@ def main():
             pr.start(cmd, name=name)
         try:
             try:
-                pr.run()
+                if args.wait:
+                    pr.run_until_last_one_finishes()
+                else:
+                    pr.run_until_first_one_finishes()
             except KeyboardInterrupt:
                 print()
         finally:
@@ -121,7 +130,7 @@ class ParaRun:
             name=decoration(self.term.bold(name)),
             pid=process.pid, rc=process.returncode))
 
-    def run(self):
+    def run_until_first_one_finishes(self):
         stop = False
         while any(pi.process for pi in self.processes):
             for pi in self.processes:
@@ -131,6 +140,13 @@ class ParaRun:
                         print('Terminating other processes')
                         self.terminate()
                         stop = True
+            sleep(0.1)
+
+    def run_until_last_one_finishes(self):
+        while any(pi.process for pi in self.processes):
+            for pi in self.processes:
+                if pi.process and pi.process.poll() is not None:
+                    pi.process = None
             sleep(0.1)
 
     def terminate(self):
