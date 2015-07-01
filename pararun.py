@@ -39,6 +39,12 @@ import threading
 from time import sleep
 
 
+if sys.version < '3.':
+    # uf...
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--color', '-c', action='store_true', help='force color output')
