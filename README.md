@@ -19,6 +19,12 @@ or given directory.
 Run MongoDB server instance.
 
 
+### instant_mysql
+
+Run MySQL server instance. You need to bootstrap it before first use (run
+with `--bootstrap`).
+
+
 ### mongo_overview
 
 Gives overview what databases and collections are contained in your MongoDB.
@@ -69,6 +75,7 @@ For example:
     git clone https://github.com/messa/tools.git
     cd /usr/local/bin
     sudo ln -s ~/code/tools/instant_apache.py   instant_apache
+    sudo ln -s ~/code/tools/instant_mysql.py    instant_mysql
     sudo ln -s ~/code/tools/instant_mongodb.py  instant_mongodb
     sudo ln -s ~/code/tools/mongo_overview.py   mongoo_overview
     sudo ln -s ~/code/tools/mongo_print.py      mongo_print
