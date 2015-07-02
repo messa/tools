@@ -24,7 +24,7 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format='%(levelname)5s: %(message)s' if args.verbose else '%(message)s')
-    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit())
     # ^^^ sys.exit() will raise SystemExit and all finally and catch blocks
     #     will be executed, terminating any running subprocesses
     try:
@@ -109,11 +109,16 @@ class InstantMySQL (object):
         p = subprocess.Popen(cmd)
         try:
             try:
-                rc = p.wait()
-                raise UserError('Process {} exited with return code {}'.format(cmd[0], rc))
-            except KeyboardInterrupt:
-                print()
+                try:
+                    rc = p.wait()
+                    raise UserError('Process {} exited with return code {}'.format(cmd[0], rc))
+                except KeyboardInterrupt:
+                    print()
+            finally:
+                self.terminate(p, name=cmd[0])
         finally:
+            # in some scenarios two signals (SIGINT and SIGTERM) are received,
+            # so this finally block is doubled to be sure to really terminate mysqld
             self.terminate(p, name=cmd[0])
 
 
