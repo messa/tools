@@ -9,7 +9,9 @@ Parameters are set with respect to typical development settings (smallfiles, loc
 import argparse
 import os
 from os.path import isdir
+import signal
 import subprocess
+import sys
 
 
 localhost = '127.0.0.1'
@@ -23,15 +25,18 @@ def main():
     p.add_argument('--wiredTiger', '-w', action='store_true')
     p.add_argument('--zlib', '-z', action='store_true', help='wiredTiger only: use zlib compression')
     args = p.parse_args()
-
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+    # ^^^ sys.exit() will raise SystemExit and all finally and catch blocks
+    #     will be executed, terminating any running subprocesses
     p = mongodb_process(
         data_dir=args.datadir, port=int(args.port),
         auth=args.auth, wiredtiger=args.wiredTiger, use_zlib=args.zlib)
     try:
         p.wait()
-    except KeyboardInterrupt:
-        p.terminate()
-        p.wait()
+    finally:
+        if p.poll() is None:
+            p.terminate()
+            p.wait()
 
 
 def mongodb_process(data_dir, port, auth, wiredtiger, use_zlib):
@@ -57,4 +62,3 @@ def mongodb_process(data_dir, port, auth, wiredtiger, use_zlib):
 
 if __name__ == '__main__':
     main()
-

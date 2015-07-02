@@ -3,6 +3,7 @@
 import argparse
 import logging
 from pathlib import Path
+import signal
 import shutil
 import subprocess
 import sys
@@ -23,8 +24,11 @@ def main():
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format='%(levelname)5s: %(message)s' if args.verbose else '%(message)s')
-    im = InstantMySQL(env_dir=args.env, port=args.port)
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+    # ^^^ sys.exit() will raise SystemExit and all finally and catch blocks
+    #     will be executed, terminating any running subprocesses
     try:
+        im = InstantMySQL(env_dir=args.env, port=args.port)
         if args.bootstrap:
             if args.clean:
                 im.remove_env()
@@ -33,6 +37,7 @@ def main():
             try:
                 im.run()
             except KeyboardInterrupt:
+                # do not print stack trace for ctrl-c
                 pass
     except UserError as e:
         sys.exit('ERROR: {}'.format(e))
