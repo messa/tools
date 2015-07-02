@@ -55,6 +55,11 @@ class InstantMySQL (object):
 
 
     def find_mysqld(self):
+        '''
+        Finds where is mysqld executable and its auxiliary files located on filesystem.
+
+        Currently supports OS X + MacPorts and Debian.
+        '''
         if Path('/opt/local/lib/mysql55/bin/mysqld').is_file():
             # OS X + MacPorts
             self.mysqld_path    = Path('/opt/local/lib/mysql55/bin/mysqld')
@@ -73,6 +78,11 @@ class InstantMySQL (object):
 
 
     def run(self):
+        '''
+        Run mysqld.
+
+        It is expected that the datadir is already prepared using bootstrap.
+        '''
         self.find_mysqld()
         if not self.env_dir.is_dir():
             raise UserError('Env dir {} does not exist; run with --bootstrap first'.format(self.env_dir))
@@ -103,12 +113,19 @@ class InstantMySQL (object):
 
 
     def remove_env(self):
+        '''
+        Remove env dir with all its contents.
+        '''
         if self.env_dir.is_dir():
             self.logger.info('Removing %s', self.env_dir)
             shutil.rmtree(str(self.env_dir))
 
 
     def bootstrap(self):
+        '''
+        Create env dir, data dir, run mysqld --bootstrap and pass it scripts
+        to create system tables.
+        '''
         self.find_mysqld()
         if self.env_dir.is_dir():
             raise UserError('Env dir {} already exists, cannot bootstrap'.format(self.env_dir))
@@ -163,6 +180,9 @@ class InstantMySQL (object):
 
 
     def feed_bootstrap_scripts(self, stdin):
+        '''
+        Helper method for bootstrap()
+        '''
         def wr(line):
             self.logger.debug('stdin: %s', line.rstrip())
             stdin.write(line)
@@ -183,6 +203,9 @@ class InstantMySQL (object):
 
 
     def tail(self, pipe, prefix):
+        '''
+        Read lines from a pipe (such as process stdout/stderr) and print them with a prefix.
+        '''
         def f():
             while True:
                 line = pipe.readline()
@@ -194,11 +217,15 @@ class InstantMySQL (object):
 
 
     def terminate(self, p, name):
+        '''
+        Terminate process if it is still running.
+        '''
         try:
             if p.poll() is None:
                 self.logger.info('Terminating %s', name)
                 p.terminate()
-            p.wait()
+                rc = p.wait()
+                self.logger.info('Process %s exited with return code %s', name, rc)
         except Exception as e:
             self.logger.error('Failed to terminate %s: %r', name, e)
 
