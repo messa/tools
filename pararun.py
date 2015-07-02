@@ -33,6 +33,7 @@ parameter --wait:
 import argparse
 from blessings import Terminal
 from itertools import cycle
+import signal
 import subprocess
 import sys
 import threading
@@ -51,6 +52,9 @@ def main():
     p.add_argument('--wait', '-w', action='store_true', help='do not terminate processes, wait for the last one to finish')
     p.add_argument('command', nargs=argparse.REMAINDER)
     args = p.parse_args()
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+    # ^^^ sys.exit() will raise SystemExit and all finally and catch blocks
+    #     will be executed, terminating any running subprocesses
     term = Terminal(force_styling=args.color)
     # args.command is something like ['echo', 'a', '::', 'echo', 'b']
     cmds = [[]]
@@ -62,14 +66,14 @@ def main():
     # cmds is now something like [['echo', 'a'], ['echo', 'b']]
     try:
         pr = ParaRun(term)
-        for cmd in cmds:
-            if cmd[0].startswith('[') and cmd[0].endswith(']'):
-                name, cmd = cmd[0], cmd[1:]
-                name = name[1:-1] # strip '[' and ']'
-            else:
-                name = None
-            pr.start(cmd, name=name)
         try:
+            for cmd in cmds:
+                if cmd[0].startswith('[') and cmd[0].endswith(']'):
+                    name, cmd = cmd[0], cmd[1:]
+                    name = name[1:-1] # strip '[' and ']'
+                else:
+                    name = None
+                pr.start(cmd, name=name)
             try:
                 if args.wait:
                     pr.run_until_last_one_finishes()
