@@ -164,7 +164,8 @@ class ParaRun:
             if pi.process:
                 try:
                     pi.process.terminate()
-                except ProcessLookupError:
+                except:
+                    # already terminated
                     pi.process = None
 
     def close(self):
@@ -173,6 +174,9 @@ class ParaRun:
             if pi.tail_thread:
                 pi.tail_thread.join()
                 pi.tail_thread = None
+            if pi.process:
+                pi.process.wait()
+                pi.process = None
 
 
 class _ProcessInfo:
