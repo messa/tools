@@ -31,13 +31,26 @@ parameter --wait:
 '''
 
 import argparse
-from blessings import Terminal
 from itertools import cycle
 import signal
 import subprocess
 import sys
 import threading
 from time import sleep
+import warnings
+
+try:
+    from blessings import Terminal
+except ImportError:
+    class Terminal:
+        _dummy = True
+        def __init__(self, **kwargs):
+            pass
+        def __getattr__(self, name):
+            return self
+        def __call__(self, s):
+            return s
+
 
 
 if sys.version < '3.':
@@ -65,6 +78,8 @@ def main():
             cmds[-1].append(x)
     # cmds is now something like [['echo', 'a'], ['echo', 'b']]
     try:
+        if getattr(term, '_dummy'):
+            print('Module blessings is not installed, output will not be colored')
         pr = ParaRun(term)
         try:
             for cmd in cmds:
@@ -80,7 +95,7 @@ def main():
                 else:
                     pr.run_until_first_one_finishes()
             except KeyboardInterrupt:
-                print()
+                print() # newline after that '^C' printed in terminal
         finally:
             pr.close()
     except AppError as e:
@@ -164,9 +179,11 @@ class ParaRun:
             if pi.process:
                 try:
                     pi.process.terminate()
-                except:
-                    # already terminated
-                    pi.process = None
+                except OSError as e:
+                    if e.errno == 3: # No such process
+                        pi.process = None
+                    else:
+                        raise
 
     def close(self):
         self.terminate()
