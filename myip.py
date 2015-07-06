@@ -5,9 +5,9 @@ import requests
 import threading
 
 
-ip_url   = 'https://ip.messa.cz/'
-ipv4_url = 'https://ip4.messa.cz/'
-ipv6_url = 'https://ip6.messa.cz/'
+ip_url   = 'https://ip.messa.cz/'   # has both A and AAAA DNS records
+ipv4_url = 'https://ip4.messa.cz/'  # has only A record
+ipv6_url = 'https://ip6.messa.cz/'  # has only AAAA record
 
 
 def main():
@@ -27,8 +27,8 @@ def main():
         t6 = threading.Thread(target=lambda: get(ipv6_url, 'IPv6'))
         t4.start()
         t6.start()
-        t6.join()
         t4.join()
+        t6.join()
 
 
 def get(url, prefix=None):
