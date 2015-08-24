@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
+'''
+'''
+
 import argparse
 from blessings import Terminal
 from bson import ObjectId
 from contextlib import contextmanager
 from datetime import datetime
 import pymongo
+from uuid import UUID
 
 
 secondary_preferred = pymongo.ReadPreference.SECONDARY_PREFERRED
@@ -19,11 +23,14 @@ def main():
     p.add_argument('collection', nargs='?')
     args = p.parse_args()
     pr = Printer(t=t)
-    client = pymongo.MongoClient(args.mongo_uri,
+    mongo_uri = args.mongo_uri
+    if not mongo_uri.startswith('mongodb://'):
+        mongo_uri = 'mongodb://' + mongo_uri
+    client = pymongo.MongoClient(mongo_uri,
         read_preference=secondary_preferred,
         connectTimeoutMS=5000,
         serverSelectionTimeoutMS=5000)
-    arg_db_name = pymongo.uri_parser.parse_uri(args.mongo_uri)['database']
+    arg_db_name = pymongo.uri_parser.parse_uri(mongo_uri)['database']
     try:
         for db_name in sorted(client.database_names()):
             if arg_db_name and db_name != arg_db_name:
@@ -57,6 +64,8 @@ def print_document(pr, doc):
         tk = t.white_bold(k)
         if isinstance(v, ObjectId):
             pr('{}: ObjectId(\'{}\')', tk, t.blue(str(v)))
+        elif isinstance(v, UUID):
+            pr('{}: UUID(\'{}\')', tk, t.blue(str(v)))
         elif isinstance(v, dict):
             pr('{}:', tk)
             with pr.indent():
@@ -66,7 +75,7 @@ def print_document(pr, doc):
             with pr.indent():
                 for n, item in enumerate(v, start=1):
                     print_document(pr, {'{}/{}'.format(n, len(v)): item})
-        elif isinstance(v, (str, int, float, datetime)):
+        elif isinstance(v, (str, int, float, datetime)) or v in (True, False, None):
             pr('{}: {!r}', tk, v)
         else:
             raise Exception('Unsupported type: {}'.format(type(v)))
