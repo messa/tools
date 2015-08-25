@@ -8,6 +8,7 @@ from blessings import Terminal
 from bson import ObjectId
 from contextlib import contextmanager
 from datetime import datetime
+import os
 import pymongo
 from uuid import UUID
 
@@ -35,6 +36,8 @@ def main():
         for db_name in sorted(client.database_names()):
             if arg_db_name and db_name != arg_db_name:
                 continue
+            if not arg_db_name and db_name == 'local':
+                continue
             pr.nl()
             pr('db: {}', t.white_bold(db_name))
             with pr.indent():
@@ -52,9 +55,9 @@ def main():
                             pr('document {}/{}:', n, doc_count)
                             with pr.indent():
                                 print_document(pr, doc)
-        pr.nl()
     finally:
         print(t.normal)
+    os._exit(0) # do not wait for mongo cleanup etc.
 
 
 def print_document(pr, doc):
