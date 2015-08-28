@@ -5,6 +5,7 @@ from blessings import Terminal
 from datetime import datetime
 from collections import defaultdict
 from contextlib import contextmanager
+import os
 import pymongo
 import sys
 from time import time
@@ -34,6 +35,7 @@ def main():
         overview(pr, client, structure=args.structure)
     except KeyboardInterrupt as e:
         sys.exit('(KeyboardInterrupt)')
+    os._exit(0)
 
 
 def overview(pr, client, structure):
