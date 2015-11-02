@@ -25,7 +25,7 @@ class WordDiff:
         a, b = self.preprocess(a), self.preprocess(b)
         assert isinstance(a, str)
         assert isinstance(b, str)
-        ops = difflib.SequenceMatcher(None, a, b).get_opcodes()
+        ops = difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes()
         out = sys.stdout.write
         removed = self.t.red_bold
         inserted = self.t.green_bold
@@ -48,9 +48,8 @@ class WordDiff:
 
     def preprocess(self, s):
         s = s.replace('\t', '\\t')
-        #s = s.replace(' ', '·')
+        s = s.replace(' ', '·')
         return s
-
 
 
 if __name__ == '__main__':
