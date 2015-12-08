@@ -5,13 +5,14 @@
 You can add this fragment to your ~/.bash_profile to setup TMPDIR env.
 variable automatically:
 
-ramdisk=/Volumes/ramdisk
-if [ -d $ramdisk ]; then
-    if mount | awk '{print $3}' | grep $ramdisk >/dev/null 2>&1; then
-        TMPDIR=$eamdisk
-        export TMPDIR
+    ramdisk=/Volumes/ramdisk
+    if [ -d $ramdisk ]; then
+        if mount | awk '{print $3}' | grep $ramdisk >/dev/null 2>&1; then
+            TMPDIR=$ramdisk
+            export TMPDIR
+        fi
     fi
-fi
+    unset ramdisk
 """
 
 import optparse
