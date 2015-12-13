@@ -65,7 +65,12 @@ class InstantMySQL (object):
 
         Currently supports OS X + MacPorts and Debian.
         '''
-        if Path('/opt/local/lib/mysql55/bin/mysqld').is_file():
+        if Path('/opt/local/lib/mysql56/bin/mysqld').is_file():
+            # OS X + MacPorts
+            self.mysqld_path    = Path('/opt/local/lib/mysql56/bin/mysqld')
+            self.mysqld_basedir = Path('/opt/local')
+            self.mysqld_pkgdir  = Path('/opt/local/share/mysql56')
+        elif Path('/opt/local/lib/mysql55/bin/mysqld').is_file():
             # OS X + MacPorts
             self.mysqld_path    = Path('/opt/local/lib/mysql55/bin/mysqld')
             self.mysqld_basedir = Path('/opt/local')
