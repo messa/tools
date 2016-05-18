@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 '''
+
 '''
 
 import argparse
+from base64 import b64encode
 from blessings import Terminal
 from bson import ObjectId
 from contextlib import contextmanager
@@ -29,8 +31,8 @@ def main():
         mongo_uri = 'mongodb://' + mongo_uri
     client = pymongo.MongoClient(mongo_uri,
         read_preference=secondary_preferred,
-        connectTimeoutMS=5000,
-        serverSelectionTimeoutMS=5000)
+        connectTimeoutMS=3000,
+        serverSelectionTimeoutMS=3000)
     arg_db_name = pymongo.uri_parser.parse_uri(mongo_uri)['database']
     try:
         for db_name in sorted(client.database_names()):
@@ -50,9 +52,10 @@ def main():
                     c = db[collection_name]
                     with pr.indent():
                         doc_count = c.count()
-                        for n, doc in enumerate(c.find(), start=1):
+                        start_index = max(0, doc_count - 30)
+                        for n, doc in enumerate(c.find()[start_index:], start=1):
                             pr.nl()
-                            pr('document {}/{}:', n, doc_count)
+                            pr('document {}/{}:', start_index + n, doc_count)
                             with pr.indent():
                                 print_document(pr, doc)
     finally:
@@ -80,6 +83,8 @@ def print_document(pr, doc):
                     print_document(pr, {'{}/{}'.format(n, len(v)): item})
         elif isinstance(v, (str, int, float, datetime)) or v in (True, False, None):
             pr('{}: {!r}', tk, v)
+        elif isinstance(v, bytes):
+            pr('{}: {}', tk, b64encode(v).decode('ascii'))
         else:
             raise Exception('Unsupported type: {}'.format(type(v)))
 
