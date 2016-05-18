@@ -109,7 +109,8 @@ def print_bytes(pr, key, value):
     except:
         pass
     else:
-        print_bytes(pr, key + '|lzma', x)
+        ratio_pct = 100. * len(value) / len(x)
+        print_bytes(pr, key + '|lzma ({:.2f} %)'.format(ratio_pct), x)
         return
 
     try:
