@@ -13,6 +13,12 @@ from datetime import datetime
 import os
 import pymongo
 from uuid import UUID
+import zlib
+import lzma
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 
 secondary_preferred = pymongo.ReadPreference.SECONDARY_PREFERRED
@@ -52,7 +58,7 @@ def main():
                     c = db[collection_name]
                     with pr.indent():
                         doc_count = c.count()
-                        start_index = max(0, doc_count - 30)
+                        start_index = max(0, doc_count - 10)
                         for n, doc in enumerate(c.find()[start_index:], start=1):
                             pr.nl()
                             pr('document {}/{}:', start_index + n, doc_count)
@@ -84,10 +90,51 @@ def print_document(pr, doc):
         elif isinstance(v, (str, int, float, datetime)) or v in (True, False, None):
             pr('{}: {!r}', tk, v)
         elif isinstance(v, bytes):
-            pr('{}: {}', tk, b64encode(v).decode('ascii'))
+            print_bytes(pr, k, v)
         else:
             raise Exception('Unsupported type: {}'.format(type(v)))
 
+
+def print_bytes(pr, key, value):
+    try:
+        x = zlib.decompress(value)
+    except:
+        pass
+    else:
+        print_bytes(pr, key + '|gz', x)
+        return
+
+    try:
+        x = lzma.decompress(value)
+    except:
+        pass
+    else:
+        print_bytes(pr, key + '|lzma', x)
+        return
+
+    try:
+        x = json.loads(value)
+    except:
+        pass
+    else:
+        pr('{}:', t.white_bold(key + '|json'))
+        with pr.indent():
+            if isinstance(x, dict):
+                print_document(pr, x)
+                return
+            elif isinstance(x, list):
+                for item in x:
+                    pr('-')
+                    with pr.indent():
+                        print_document(pr, item)
+                return
+
+    vrepr = repr(value)
+    v64 = b64encode(value).decode('ascii')
+    if len(vrepr) < len(v64):
+        pr('{}: {}', t.white_bold(key), vrepr)
+    else:
+        pr('{}: {}', t.white_bold(key + '|base64'), v64)
 
 
 class Printer:
