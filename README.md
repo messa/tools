@@ -69,20 +69,12 @@ You have more options how to run these tools easily from command line:
   - Use [alias](http://www.gnu.org/software/bash/manual/html_node/Aliases.html)
     or shell function
 
-For example:
+For example - adding to `$PATH` in `~/.bashrc`:
 
-    cd ~/code
-    git clone https://github.com/messa/tools.git
-    cd /usr/local/bin
-    sudo ln -s ~/code/tools/instant_apache.py   instant_apache
-    sudo ln -s ~/code/tools/instant_mysql.py    instant_mysql
-    sudo ln -s ~/code/tools/instant_mongodb.py  instant_mongodb
-    sudo ln -s ~/code/tools/mongo_overview.py   mongoo_overview
-    sudo ln -s ~/code/tools/mongo_print.py      mongo_print
-    sudo ln -s ~/code/tools/pararun.py          pararun
-    sudo ln -s ~/code/tools/trim.py             trim
-    sudo ln -s ~/code/tools/xwatch.py           xwatch
-
+    if [ -d ~/code/tools ]; then
+        PATH=$PATH:~/code/tools
+        export PATH
+    fi
 
 Versioning
 ----------
@@ -90,8 +82,3 @@ Versioning
 I've created branch _v01_ where should be introduced no backward-incompatible
 changes. Sometimes I include these tools in a project so it is better to include
 a specific version branch than _master_.
-
-
-
-
-
