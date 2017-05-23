@@ -36,6 +36,18 @@ skip_suffixes = '''
 '''.split()
 
 
+class SkipPolicy:
+
+    def skip_directory(self, path):
+        if path.name.startswith('.'):
+            return True
+        if path.name in skip_names:
+            return True
+        if any(path.name.endswith(s) for s in skip_suffixes):
+            return True
+        return False
+
+
 stop_event = threading.Event()
 
 
@@ -133,10 +145,14 @@ def print_changed_files(old_state, new_state):
 
 
 def scan_state(paths):
-    return StatStateScanner().scan(paths)
+    scanner = StatStateScanner(skip_policy=SkipPolicy())
+    return scanner.scan(paths)
 
 
 class StatStateScanner:
+
+    def __init__(self, skip_policy):
+        self.skip_policy = skip_policy
 
     def scan(self, paths):
         state = {}
@@ -148,17 +164,13 @@ class StatStateScanner:
     def _scan_path(self, state, p):
         st = p.stat()
         if stat.S_ISDIR(st.st_mode):
-            self._scan_dir(state, p, st)
+            self._scan_dir(state, p)
         elif stat.S_ISREG(st.st_mode):
             self._scan_file(state, p, st)
 
-    def _scan_dir(self, state, p, st):
+    def _scan_dir(self, state, p):
         for ip in p.iterdir():
-            if ip.name.startswith('.'):
-                continue
-            if ip.name in skip_names:
-                continue
-            if any(ip.name.endswith(s) for s in skip_suffixes):
+            if self.skip_policy.skip_directory(ip):
                 continue
             self._scan_path(state, ip)
 
