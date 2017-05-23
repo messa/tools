@@ -59,11 +59,16 @@ def main():
 
 
 def run_terminate(watch_paths, interval, command):
+    '''
+    Run the command at the beginning and when any files change.
+    If the command is already running then terminate it and run again.
+    '''
     p = None
     state = None
     try:
         while True:
             if stop_event.is_set():
+                print('Stopped')
                 return
             current_state = scan_state(watch_paths)
             if current_state == state:
@@ -85,8 +90,15 @@ def run_terminate(watch_paths, interval, command):
 
 
 def run_wait(watch_paths, interval, command):
+    '''
+    Run the command at the beginning and when any files change.
+    If the command is already running then wait for it to finish before running again.
+    '''
     state = None
     while True:
+        if stop_event.is_set():
+            print('Stopped')
+            return
         current_state = scan_state(watch_paths)
         if current_state == state:
             stop_event.wait(interval)
