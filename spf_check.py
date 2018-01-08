@@ -25,6 +25,8 @@ You can validate also the contents of the SPF record:
 
 import argparse
 import dns.resolver # apt-get install python3-dnspython
+import sys
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -32,59 +34,74 @@ def main():
     args = p.parse_args()
 
     if ':' in args.spf_record or '=' in args.spf_record:
-        validate_spf_record(None, args.spf_record, [])
+        ok = validate_spf_record(None, args.spf_record, [])
     else:
-        validate_domain_spf(args.spf_record, [])
+        ok = validate_domain_spf(args.spf_record, [])
+    sys.exit(0 if ok else 1)
 
 
 def validate_spf_record(domain, spf_record, resolves, indent=''):
-    print(indent + 'Validating: {}'.format(spf_record))
+    print(indent + 'Validating: {!r} [{} bytes]'.format(spf_record, len(spf_record)))
+    ok = True
+    if len(spf_record) > 255:
+        print(indent + '!!! SPF record is too long - {} characters'.format(len(spf_records)))
+        ok = False
     parts = spf_record.split()
     if parts[0] != 'v=spf1':
         raise Exception('Does not begin with v=spf1')
     for part in parts[1:]:
         if part in ['-all', '~all', '?all']:
             continue
-        elif part in ['mx']:
+        elif part == 'mx':
             resolves.append(domain)
             print(indent + 'Would be resolved: {} {} ({})'.format(part, domain, len(resolves)))
-
+            if len(resolves) > 10:
+                print(indent + '!!! Too many resolves')
+                ok = False
         elif ':' in part:
             t, addr = part.split(':', 1)
             if t in ['ip4', 'ip6']:
                 continue
             elif t == 'include':
-                validate_domain_spf(addr, resolves, indent=indent + '  ')
+                res = validate_domain_spf(addr, resolves, indent=indent + '  ')
+                if not res:
+                    ok = False
             elif t in ['a', 'mx']:
                 resolves.append(addr)
                 print(indent + 'Would be resolved: {} ({})'.format(part, len(resolves)))
                 if len(resolves) > 10:
                     print(indent + '!!! Too many resolves')
+                    ok = False
             else:
                 raise Exception('Unknown part {!r} in {!r}'.format(part, spf_record))
         else:
             raise Exception('Unknown part {!r}'.format(part))
+    return ok
 
 
 def validate_domain_spf(domain, resolves, indent=''):
+    ok = True
     r = dns.resolver.Resolver()
     resolves.append(domain)
     print(indent + 'Resolving TXT: {} ({})'.format(domain, len(resolves)))
     if len(resolves) > 10:
         print(indent + '!!! Too many resolves')
+        ok = False
     answers = r.query(domain, 'TXT')
     answers = [str(item).strip('"') for item in answers]
     if not answers:
         print(indent + '!!! No TXT records for {}'.format(domain))
-        return
+        return False
     spf_answers = [item for item in answers if item.startswith('v=spf')]
     if not spf_answers:
         print(indent + '!!! No TXT SPF record for {}'.format(domain))
+        ok = False
         print(indent + '  Other TXT records:')
         for item in answers:
             print('  -', str(item))
     elif len(spf_answers) > 1:
         print(indent + '!!! Multiple SPF records for {}:'.format(domain))
+        ok = False
         for item in spf_answers:
             print(indent + '  -', item)
         spf_record = spf_answers[0]
@@ -92,6 +109,7 @@ def validate_domain_spf(domain, resolves, indent=''):
     else:
         spf_record, = spf_answers
         validate_spf_record(domain, spf_record, resolves, indent=indent + '  ')
+    return ok
 
 
 if __name__ == '__main__':
