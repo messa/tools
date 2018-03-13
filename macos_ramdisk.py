@@ -4,19 +4,16 @@
 You can add this fragment to your ~/.bash_profile to setup TMPDIR env.
 variable automatically:
 
-    ramdisk=/Volumes/ramdisk
-    if [ -d $ramdisk ]; then
-        if mount | awk '{print $3}' | grep $ramdisk >/dev/null 2>&1; then
-            TMPDIR=$ramdisk
-            export TMPDIR
-        fi
+    if [ -d /Volumes/ramdisk/tmp ]; then
+      export TMPDIR=/Volumes/ramdisk/tmp
     fi
-    unset ramdisk
 '''
 
 import argparse
 import os
+from pathlib import Path
 import re
+import stat
 import subprocess
 import sys
 
@@ -69,18 +66,25 @@ def main():
     p.add_argument('--size', default='600M')
     args = p.parse_args()
 
+    mountpoint = Path(args.mountpoint)
     size = parse_size(args.size)
-    if already_mounted(args.mountpoint):
-        raise AppError('Some filesystem is already mounted at {}'.format(args.mountpoint))
-    create_directory(args.mountpoint)
+    if not mountpoint.is_dir():
+        create_directory(mountpoint)
+    mountpoint = mountpoint.resolve()
+    if list(mountpoint.iterdir()):
+        raise AppError('Mountpoint directory {} is not empty'.format(mountpoint))
+    if already_mounted(mountpoint):
+        raise AppError('Some filesystem is already mounted at {}'.format(mountpoint))
     device_name = create_ramdisk_device(size)
     create_filesystem(device_name)
-    mount(device_name, args.mountpoint)
+    mount(device_name, mountpoint)
+    (mountpoint / 'tmp').mkdir()
+    (mountpoint / 'tmp').chmod(0o777 | stat.S_ISVTX)
     print('Done.')
     print()
     print('If you want to use the ramdisk as TMPDIR, run these commands:')
     print()
-    print('TMPDIR={}; export TMPDIR'.format(args.mountpoint))
+    print('TMPDIR={}; export TMPDIR'.format(mountpoint / 'tmp'))
     tmpdir = os.getenv('TMPDIR')
     if tmpdir:
         print()
@@ -88,9 +92,8 @@ def main():
 
 
 def create_directory(path):
-    if not os.path.isdir(path):
-        print('Creating directory {}'.format(path))
-        os.mkdir(path)
+    print('Creating directory {}'.format(path))
+    path.mkdir()
 
 
 def already_mounted(mountpoint):
@@ -100,7 +103,7 @@ def already_mounted(mountpoint):
         if not m:
             raise AppError('Failed to parse line {} of output of the command mount: {}'.format(n, line))
         location = m.group(2)
-        if location == mountpoint:
+        if location == str(mountpoint):
             return True
     return False
 
@@ -130,7 +133,7 @@ def create_filesystem(device_name):
 def mount(device_name, mountpoint):
     print('Mounting {} on {}'.format(device_name, mountpoint))
     check_output(
-        ['mount', '-o', 'noatime', '-t', 'hfs', device_name, mountpoint])
+        ['mount', '-o', 'noatime', '-t', 'hfs', device_name, str(mountpoint)])
 
 
 def check_output(cmd):
