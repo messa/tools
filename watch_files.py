@@ -56,7 +56,7 @@ def main():
     p.add_argument('--path', '-p', metavar='PATH', action='append', help='directory/file to watch')
     p.add_argument('--terminate', '-t', action='store_true')
     p.add_argument('--interval', '-i', type=float, default=.25)
-    p.add_argument('command', nargs='+')
+    p.add_argument('command', nargs=argparse.REMAINDER)
     args = p.parse_args()
 
     watch_paths = args.path or ['.']

@@ -2,11 +2,10 @@
 
 import argparse
 import csv
-import logging
 import json
+import logging
 import reprlib
 import sys
-
 
 
 logger = logging.getLogger(__name__)
@@ -30,9 +29,8 @@ def main():
         format='%(levelname)5s: %(message)s',
         level=logging.DEBUG if args.verbose else logging.WARNING)
 
-
     if not args.csv_file or args.csv_file == '-':
-        csv_data = sys.stdint.buffer.read()
+        csv_data = sys.stdin.buffer.read()
     else:
         csv_data = open(args.csv_file, 'rb').read()
 
