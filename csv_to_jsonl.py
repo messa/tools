@@ -54,7 +54,7 @@ def main():
         for row in rows:
             if row.get('') == '':
                 del row['']
-            print(yaml.dump(dict(row), default_flow_style=False, width=250).rstrip('\n'))
+            print(yaml.dump(dict(row), default_flow_style=False, width=250, allow_unicode=True).rstrip('\n'))
             print('---')
     else:
         for row in rows:
