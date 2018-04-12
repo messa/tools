@@ -50,11 +50,14 @@ def csv_to_jsonl(csv_data, yaml_output):
     dialect = csv.Sniffer().sniff(text[:100000])
     logger.debug('Sniffed CSV dialect: %s', obj_attributes(dialect))
 
-
     lines = text.splitlines(True)
     reader = csv.DictReader(lines, dialect=dialect)
     rows = list(reader)
     logger.debug('Total CSV rows: %s', len(rows))
+
+    for row in rows:
+        if '' in row and row[''] == None or row[''] == '':
+            row.pop('')
 
     if yaml_output:
         import yaml
