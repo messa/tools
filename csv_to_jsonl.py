@@ -4,6 +4,7 @@ import argparse
 import csv
 import json
 import logging
+import os
 import reprlib
 import sys
 
@@ -34,11 +35,19 @@ def main():
     else:
         csv_data = open(args.csv_file, 'rb').read()
 
+    try:
+        csv_to_jsonl(csv_data, yaml_output=args.yaml)
+    except BrokenPipeError as e:
+        os._exit(1)
+
+
+def csv_to_jsonl(csv_data, yaml_output):
+    assert isinstance(csv_data, bytes)
     logger.debug('data: %s', smart_repr(csv_data))
     text = decode(csv_data)
     logger.debug('decoded: %s', smart_repr(text))
 
-    dialect = csv.Sniffer().sniff(text)
+    dialect = csv.Sniffer().sniff(text[:100000])
     logger.debug('Sniffed CSV dialect: %s', obj_attributes(dialect))
 
 
@@ -47,7 +56,7 @@ def main():
     rows = list(reader)
     logger.debug('Total CSV rows: %s', len(rows))
 
-    if args.yaml:
+    if yaml_output:
         import yaml
         for row in rows:
             if row.get('') == '':
