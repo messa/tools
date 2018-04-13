@@ -52,7 +52,7 @@ def validate_spf_record(domain, spf_record, resolves, indent=''):
     for part in parts[1:]:
         if part in ['-all', '~all', '?all']:
             continue
-        elif part == 'mx':
+        elif part in ['mx', 'a']:
             resolves.append(domain)
             print(indent + 'Would be resolved: {} {} ({})'.format(part, domain, len(resolves)))
             if len(resolves) > 10:
