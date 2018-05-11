@@ -87,7 +87,11 @@ def validate_domain_spf(domain, resolves, indent=''):
     if len(resolves) > 10:
         print(indent + '!!! Too many resolves')
         ok = False
-    answers = r.query(domain, 'TXT')
+    try:
+        answers = r.query(domain, 'TXT')
+    except Exception as e:
+        print(indent + '!!! Failed to resolve TXT {}: {}'.format(domain, e))
+        return False
     answers = [str(item).strip('"') for item in answers]
     if not answers:
         print(indent + '!!! No TXT records for {}'.format(domain))
