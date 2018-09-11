@@ -87,7 +87,10 @@ def run_terminate(watch_paths, interval, command):
                 stop_event.wait(interval)
             else:
                 if p:
-                    os.killpg(p.pid, signal.SIGTERM)
+                    try:
+                        os.killpg(p.pid, signal.SIGTERM)
+                    except Exception as e:
+                        print('Failed to killpg({pid}): {e}'.format(pid=p.pid, e=e), file=sys.stderr)
                     p.wait()
                     stop_event.wait(.1)
                 if stop_event.is_set():
@@ -97,7 +100,10 @@ def run_terminate(watch_paths, interval, command):
                 p = subprocess.Popen(command, start_new_session=True)
     finally:
         if p:
-            os.killpg(p.pid, signal.SIGTERM)
+            try:
+                os.killpg(p.pid, signal.SIGTERM)
+            except Exception as e:
+                print('Failed to killpg({pid}): {e}'.format(pid=p.pid, e=e), file=sys.stderr)
             p.wait()
 
 
