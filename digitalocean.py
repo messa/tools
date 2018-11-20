@@ -4,8 +4,8 @@ import argparse
 from datetime import datetime
 import logging
 import os
-from pprint import pprint
-from reprlib import repr as smart_repr
+from pathlib import Path
+import re
 import requests
 import sys
 from time import time, sleep
@@ -43,11 +43,25 @@ def get_digitalocean_access_token():
     if os.environ.get('DO_ACCESS_TOKEN'):
         logger.debug('Using access token from env variable DO_ACCESS_TOKEN')
         return os.environ['DO_ACCESS_TOKEN']
+    try_paths = [
+        '~/.config/digital_ocean_access_token',
+    ]
+    for p in try_paths:
+        p = Path(p).expanduser()
+        if p.is_file():
+            token = p.read_text().strip()
+            if re.match(r'^[a-zA-Z0-9]+$', token):
+                return token
+            else:
+                logger.warning('Content of file %s does not look like token: %r', p, token[:1000])
+    sys.exit('No access tpken found')
 
 
 class DOAPITransport:
 
     def __init__(self, token):
+        if not token:
+            raise Exception('No token')
         self.rs = requests.session()
         self.rs.headers.update({
             'Authorization': f'Bearer {token}',
@@ -72,10 +86,14 @@ class DOAPITransport:
         return r.json()
 
     def _log_rate_limit(self, headers):
-        logger.debug(
-            'Rate limit: %s/%s (reset in %d s)',
-            headers['Ratelimit-Remaining'], headers['Ratelimit-Limit'],
-            int(time()) - int(headers['Ratelimit-Reset']))
+        try:
+            logger.debug(
+                'Rate limit: %s/%s (reset in %d s)',
+                headers['Ratelimit-Remaining'], headers['Ratelimit-Limit'],
+                int(time()) - int(headers['Ratelimit-Reset']))
+        except KeyError:
+            # some of the rate-limit headers was not sent
+            pass
 
 
 def list_droplets(transport):
