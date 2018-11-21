@@ -159,8 +159,8 @@ def resize_droplet(transport, droplet_id, new_size):
             table.append({
                 'current': '>>>>>>>' if size['slug'] == droplet_before['size']['slug'] else '',
                 'slug': size['slug'],
-                'memory': size['memory'],
-                'vcpus': size['vcpus'],
+                'memory': '{:4} GB'.format(size['memory'] / 1024),
+                'vcpus': '{:2}'.format(size['vcpus']),
                 'disk': size['disk'],
                 'price_monthly': '{:6.2f}'.format(size['price_monthly']),
                 'available': size['available'],
