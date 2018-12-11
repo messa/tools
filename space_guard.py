@@ -27,7 +27,7 @@ def main():
     while True:
         try:
             p.wait(args.interval)
-        except TimeoutExpired:
+        except subprocess.TimeoutExpired:
             pass
         else:
             sys.exit(p.returncode)
