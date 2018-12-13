@@ -152,7 +152,7 @@ def resize_droplet(transport, droplet_id, new_size):
     print('Droplet:')
     print_droplet_table([droplet_before])
     if not new_size:
-        reply = transport.get('/v2/sizes')
+        reply = transport.get('/v2/sizes?per_page=200')
         print('Available sizes:')
         table = []
         for size in reply['sizes']:
