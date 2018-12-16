@@ -19,6 +19,7 @@ def main():
     p.add_argument('--verbose', '-v', action='store_true')
     sub = p.add_subparsers(dest='command')
     p_resize = sub.add_parser('resize', help='resize a droplet')
+    p_resize.add_argument('--poweron', '--on', action='store_true', help='power on after resize finishes')
     p_resize.add_argument('droplet_id')
     p_resize.add_argument('new_size', nargs='?')
     p_poweron = sub.add_parser('poweron', help='power on a droplet')
@@ -33,6 +34,8 @@ def main():
         list_droplets(transport)
     elif args.command == 'resize':
         resize_droplet(transport, args.droplet_id, args.new_size)
+        if args.poweron:
+            power_on_droplet(transport, args.droplet_id)
     elif args.command == 'poweron':
         power_on_droplet(transport, args.droplet_id)
     else:
@@ -194,6 +197,9 @@ def power_on_droplet(transport, droplet_id):
     droplet_before = reply['droplet']
     print('Droplet:')
     print_droplet_table([droplet_before])
+    if droplet_before['status'] == 'active':
+        print(f'Droplet status is already {droplet_before["status"]}')
+        return
     payload = {
         'type': 'power_on',
     }
