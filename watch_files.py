@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+'''
+Watch files/directories for any changes and execute given command.
+
+Alternatives:
+
+- entr - http://eradman.com/entrproject/
+- watchdog - https://github.com/gorakhargosh/watchdog
+'''
+
 import argparse
 import os
 from pathlib import Path
