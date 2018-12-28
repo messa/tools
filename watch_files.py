@@ -52,8 +52,9 @@ class SkipPolicy:
             return True
         if path.name in skip_names:
             return True
-        if any(path.name.endswith(s) for s in skip_suffixes):
-            return True
+        for s in skip_suffixes:
+            if path.name.endswith(s):
+                return True
         return False
 
 
