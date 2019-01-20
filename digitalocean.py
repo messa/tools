@@ -113,8 +113,8 @@ def print_droplet_table(droplets):
     table = []
     for droplet in droplets:
         image_name = f"{droplet['image']['distribution']} {droplet['image']['name']}"
-        ip_addresses = [net['ip_address'] for net in droplet['networks']['v4']]
-        ip_addresses += [net['ip_address'] for net in droplet['networks']['v6']]
+        ip_addresses = [net['ip_address'].ljust(15) for net in droplet['networks']['v4']]
+        ip_addresses += [pretty_ipv6(net['ip_address']) for net in droplet['networks']['v6']]
         table.append({
             'region': droplet['region']['slug'],
             'id': droplet['id'],
@@ -128,6 +128,14 @@ def print_droplet_table(droplets):
             'IP addresses': ' '.join(ip_addresses),
         })
     print_table(table)
+
+
+def pretty_ipv6(address):
+    address = address.lower()
+    address = re.sub(r':0+([0-9a-f])', r':\1', address)
+    if '::' not in address:
+        address = address.replace(':0:0:', '::', 1)
+    return address
 
 
 def print_table(table):
