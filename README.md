@@ -6,6 +6,8 @@ There are some utilities I've created for myself.
 
 Some of them I use on daily basis. Some of them are more like experiments or prototypes.
 
+See also: [dotfiles](https://github.com/messa/dotfiles), [tips](https://github.com/messa/tips)
+
 
 Installation
 ------------
