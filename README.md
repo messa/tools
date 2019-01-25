@@ -2,7 +2,9 @@
 Useful tools
 ============
 
-There are some utilities I use.
+There are some utilities I've created for myself.
+
+Some of them I use on daily basis. Some of them are more like experiments or prototypes.
 
 
 Installation
