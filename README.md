@@ -29,3 +29,9 @@ Versioning
 I've created branch _v01_ where should be introduced no backward-incompatible
 changes. Sometimes I include these tools in a project so it is better to include
 a specific version branch than _master_.
+
+
+Similar repos
+-------------
+
+- [github.com/encukou/bin](https://github.com/encukou/bin)
