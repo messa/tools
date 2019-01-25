@@ -4,59 +4,6 @@ Useful tools
 
 There are some utilities I use.
 
-Overview
---------
-
-
-### instant_apache
-
-Create configuration and run Apache webserver with document root in current
-or given directory.
-
-
-### instant_mongodb
-
-Run MongoDB server instance.
-
-
-### instant_mysql
-
-Run MySQL server instance. You need to bootstrap it before first use (run
-with `--bootstrap`).
-
-
-### mongo_overview
-
-Gives overview what databases and collections are contained in your MongoDB.
-With argument `-s` it also analyzes and prints document structure.
-
-
-### mongo_print
-
-Dump all documents from MongoDB.
-
-
-### pararun
-
-Run commands in parallel.
-
-    $ ./pararun.py echo foo :: echo bar
-    [echo] foo
-    [echo] bar
-
-
-### trim
-
-Trim excessive whitespace from line ends in text files.
-
-
-### xwatch
-
-Run one command repeatedly, separate outputs with blank lines.
-
-This is an alternative to the `watch` command, but the fullscreen-like
-behavior is done with blank lines, so the output can be easily scrolled.
-
 
 Installation
 ------------
