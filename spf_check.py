@@ -24,7 +24,7 @@ You can validate also the contents of the SPF record:
 '''
 
 import argparse
-import dns.resolver # apt-get install python3-dnspython
+from dns.resolver import Resolver # sudo apt-get install python3-dnspython
 import sys
 
 
@@ -36,7 +36,7 @@ def main():
     if ':' in args.spf_record or '=' in args.spf_record:
         ok = validate_spf_record(None, args.spf_record, [])
     else:
-        ok = validate_domain_spf(args.spf_record, [])
+        ok = validate_domain_spf(args.spf_record, [], initial=True)
     sys.exit(0 if ok else 1)
 
 
@@ -79,16 +79,17 @@ def validate_spf_record(domain, spf_record, resolves, indent=''):
     return ok
 
 
-def validate_domain_spf(domain, resolves, indent=''):
+def validate_domain_spf(domain, resolves, indent='', initial=False):
     ok = True
-    r = dns.resolver.Resolver()
-    resolves.append(domain)
+    r = Resolver()
+    if not initial:
+        resolves.append(domain)
     print(indent + 'Resolving TXT: {} ({})'.format(domain, len(resolves)))
     if len(resolves) > 10:
         print(indent + '!!! Too many resolves')
         ok = False
     try:
-        answers = r.query(domain, 'TXT')
+        answers = r.resolve(domain, 'TXT')
     except Exception as e:
         print(indent + '!!! Failed to resolve TXT {}: {}'.format(domain, e))
         return False
